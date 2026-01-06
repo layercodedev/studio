@@ -174,6 +174,19 @@ export interface DatabaseViewSchema {
   statement: string;
 }
 
+// View configuration types for display styles (Table, Board, etc.)
+export type ViewStyleType = "table" | "board";
+
+export interface BoardConfig {
+  groupByColumn: string;
+  titleColumn?: string; // defaults to 'name' if present
+}
+
+export interface ViewConfig {
+  style: ViewStyleType;
+  boardConfig?: BoardConfig;
+}
+
 interface DatabaseTableOperationInsert {
   operation: "INSERT";
   values: Record<string, DatabaseValue>;

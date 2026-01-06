@@ -1,10 +1,16 @@
+import { useCommonDialog } from "@/components/common-dialog";
 import { useStudioContext } from "@/context/driver-provider";
 import { useSchema } from "@/context/schema-provider";
 import { OpenContextMenuList } from "@/core/channel-builtin";
 import { scc } from "@/core/command";
 import { DatabaseSchemaItem } from "@/drivers/base-driver";
 import { triggerEditorExtensionTab } from "@/extensions/trigger-editor";
+import {
+  viewDataExtensionTab,
+  viewEditorExtensionTab,
+} from "@/extensions/view-editor";
 import { ExportFormat, exportTableData } from "@/lib/export-helper";
+import { deleteViewConfig } from "@/lib/view-config-service";
 import { Icon, Table } from "@phosphor-icons/react";
 import { LucideCog, LucideDatabase, LucideView } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,8 +45,6 @@ function prepareListViewItem(
   return schema.map((s) => {
     let icon = Table;
     let iconClassName = "";
-
-    console.log("ss", s);
 
     if (s.type === "trigger") {
       icon = LucideCog;
@@ -159,6 +163,7 @@ export default function SchemaList({ search }: Readonly<SchemaListProps>) {
   const [selected, setSelected] = useState("");
   const { refresh, schema, currentSchemaName } = useSchema();
   const [editSchema, setEditSchema] = useState<string | null>(null);
+  const { showDialog } = useCommonDialog();
 
   const [collapsed, setCollapsed] = useState(() => {
     return new Set<string>();
@@ -181,6 +186,7 @@ export default function SchemaList({ search }: Readonly<SchemaListProps>) {
     (item?: DatabaseSchemaItem) => {
       const selectedName = item?.name;
       const isTable = item?.type === "table";
+      const isView = item?.type === "view";
       const schemaName = item?.schemaName ?? currentSchemaName;
 
       const createMenuSection = {
@@ -235,6 +241,55 @@ export default function SchemaList({ search }: Readonly<SchemaListProps>) {
             }
           : undefined;
 
+      // Delete View menu item
+      const deleteViewItem =
+        isView && selectedName
+          ? {
+              title: "Delete View",
+              onClick: () => {
+                const dropSql = databaseDriver.dropView(schemaName, selectedName);
+                showDialog({
+                  title: "Delete View",
+                  content: (
+                    <p>
+                      Are you sure you want to delete the view{" "}
+                      <strong>{selectedName}</strong>? This action cannot be
+                      undone.
+                    </p>
+                  ),
+                  destructive: true,
+                  previewCode: dropSql,
+                  actions: [
+                    {
+                      text: "Delete",
+                      onClick: async () => {
+                        await databaseDriver.query(dropSql);
+                        // Also delete the view config
+                        await deleteViewConfig(
+                          databaseDriver,
+                          schemaName,
+                          selectedName
+                        );
+                      },
+                      onComplete: () => {
+                        refresh();
+                        // Close any open tabs for this view
+                        viewEditorExtensionTab.close({
+                          schemaName,
+                          name: selectedName,
+                        });
+                        viewDataExtensionTab.close({
+                          schemaName,
+                          viewName: selectedName,
+                        });
+                      },
+                    },
+                  ],
+                });
+              },
+            }
+          : undefined;
+
       return [
         createMenuSection,
         {
@@ -252,10 +307,21 @@ export default function SchemaList({ search }: Readonly<SchemaListProps>) {
         ...modificationSection,
         modificationSection.length > 0 ? { separator: true } : undefined,
 
+        // Destructive section
+        deleteViewItem,
+        deleteViewItem ? { separator: true } : undefined,
+
         { title: "Refresh", onClick: () => refresh() },
       ].filter(Boolean) as OpenContextMenuList;
     },
-    [refresh, databaseDriver, currentSchemaName, extensions, exportFormats]
+    [
+      refresh,
+      databaseDriver,
+      currentSchemaName,
+      extensions,
+      exportFormats,
+      showDialog,
+    ]
   );
 
   const listViewItems = useMemo(() => {
@@ -315,10 +381,15 @@ export default function SchemaList({ search }: Readonly<SchemaListProps>) {
         selectedKey={selected}
         onSelectChange={setSelected}
         onDoubleClick={(item) => {
-          if (item.data.type === "table" || item.data.type === "view") {
+          if (item.data.type === "table") {
             scc.tabs.openBuiltinTable({
               schemaName: item.data.schemaName ?? "",
               tableName: item.data.name,
+            });
+          } else if (item.data.type === "view") {
+            viewDataExtensionTab.open({
+              schemaName: item.data.schemaName ?? "",
+              viewName: item.data.name,
             });
           } else if (item.data.type === "trigger") {
             triggerEditorExtensionTab.open({

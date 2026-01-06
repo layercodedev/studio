@@ -71,19 +71,31 @@ describe("parse", () => {
   test("parsing view with subquery", () => {
     const view = parseCreateViewScript(
       "analytics",
-      `CREATE VIEW TOP_CUSTOMERS AS 
-       SELECT customer_id, SUM(amount) as total 
-       FROM (SELECT * FROM transactions WHERE status = 'completed') 
-       GROUP BY customer_id 
+      `CREATE VIEW TOP_CUSTOMERS AS
+       SELECT customer_id, SUM(amount) as total
+       FROM (SELECT * FROM transactions WHERE status = 'completed')
+       GROUP BY customer_id
        ORDER BY total DESC;`
     );
     expect(view).toMatchObject({
       schemaName: "analytics",
       name: "TOP_CUSTOMERS",
-      statement: `SELECT customer_id, SUM(amount) as total 
-       FROM (SELECT * FROM transactions WHERE status = 'completed') 
-       GROUP BY customer_id 
+      statement: `SELECT customer_id, SUM(amount) as total
+       FROM (SELECT * FROM transactions WHERE status = 'completed')
+       GROUP BY customer_id
        ORDER BY total DESC`,
+    });
+  });
+
+  test("parsing view without trailing semicolon", () => {
+    const view = parseCreateViewScript(
+      "main",
+      `CREATE VIEW people_view AS SELECT * FROM people`
+    );
+    expect(view).toMatchObject({
+      schemaName: "main",
+      name: "people_view",
+      statement: "SELECT * FROM people",
     });
   });
 });

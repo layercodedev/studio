@@ -20,20 +20,21 @@ export function parseCreateViewScript(
 
   let statement = "";
   const fromStatement = cursor.getPointer();
-  let toStatement;
+  let toStatement = fromStatement;
 
   while (!cursor.end()) {
-    toStatement = cursor.getPointer();
-
     if (cursor.match(";")) {
       break;
     }
 
+    toStatement = cursor.getPointer();
     cursor.next();
   }
 
-  if (fromStatement && toStatement) {
-    statement = cursor.toStringRange(fromStatement, toStatement);
+  if (fromStatement !== undefined && toStatement !== undefined) {
+    // toStatement points to the last non-semicolon token
+    // Use toStatement + 1 because toStringRange uses exclusive end index
+    statement = cursor.toStringRange(fromStatement, toStatement + 1);
   }
 
   return {
