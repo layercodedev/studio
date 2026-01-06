@@ -39,6 +39,7 @@ export default function SchemaEditor({
             type: databaseDriver.columnTypeSelector.idTypeName ?? "INTEGER",
             constraint: {
               primaryKey: true,
+              autoIncrement: true,
             },
           }
         : {

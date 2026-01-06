@@ -22,7 +22,6 @@ interface ViewDataDisplayProps {
   schemaName: string;
   viewStatement: string;
   viewConfig: ViewConfig;
-  onRefresh?: () => void;
   refreshKey?: number;
 }
 
@@ -31,7 +30,6 @@ export default function ViewDataDisplay({
   schemaName,
   viewStatement,
   viewConfig,
-  onRefresh,
   refreshKey,
 }: ViewDataDisplayProps) {
   const { databaseDriver } = useStudioContext();

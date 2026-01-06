@@ -55,9 +55,6 @@ export default function ViewDataTab({ schemaName, viewName }: ViewDataTabProps) 
     wasActiveRef.current = isActiveTab;
   }, [isActiveTab]);
 
-  const onRefresh = useCallback(() => {
-    setRevision((prev) => prev + 1);
-  }, []);
 
   if (loading) {
     return <OpacityLoading />;
@@ -81,7 +78,6 @@ export default function ViewDataTab({ schemaName, viewName }: ViewDataTabProps) 
       schemaName={schemaName}
       viewStatement={viewSchema.statement}
       viewConfig={viewConfig}
-      onRefresh={onRefresh}
       refreshKey={revision}
     />
   );
