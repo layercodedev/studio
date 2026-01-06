@@ -1,7 +1,8 @@
 {
   "main": ".open-next/worker.js",
-  "name": "outerbase-studio",
-  "compatibility_date": "2024-09-23",
+  "name": "sor-viewer",
+  "keep_names": false,
+  "compatibility_date": "2025-05-05",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
@@ -13,8 +14,8 @@
   },
   "kv_namespaces": [
     {
-      "binding": "NEXT_CACHE_WORKERS_KV",
-      "id": "d6857f07f0a04e108dfddba469201edf"
+      "binding": "NEXT_INC_CACHE_KV",
+      "id": "46c71020fe4d4a3299d4c0b32f81395a"
     }
   ]
 }

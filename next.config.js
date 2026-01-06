@@ -10,6 +10,24 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_STUDIO_VERSION: pkg.version,
   },
+  async headers() {
+    return [
+      {
+        // Allow embed routes to be framed from any origin
+        source: "/embed/:path*",
+        headers: [
+          {
+            key: "X-Frame-Options",
+            value: "ALLOWALL",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *",
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
